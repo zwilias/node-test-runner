@@ -305,6 +305,8 @@ findUp('elm-package.json', { cwd: path.dirname(testFile) })
         }
 
         runTests();
+    }).catch(function(err) {
+      throw err;
     });
 
 
