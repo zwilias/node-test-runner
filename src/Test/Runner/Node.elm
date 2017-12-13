@@ -71,6 +71,9 @@ type Msg
 port send : String -> Cmd msg
 
 
+port finished : () -> Cmd msg
+
+
 warn : String -> a -> a
 warn str result =
     let
@@ -229,16 +232,22 @@ sendResults isFinished testReporter results =
             -- means we reverse the list again, while also doing the conversion!
             ( toString testId, testReporter.reportComplete result ) :: list
     in
-    Encode.object
-        [ ( "type", Encode.string typeStr )
-        , ( "results"
-          , results
-                |> List.foldl addToKeyValues []
-                |> Encode.object
-          )
+    Cmd.batch
+        [ Encode.object
+            [ ( "type", Encode.string typeStr )
+            , ( "results"
+              , results
+                    |> List.foldl addToKeyValues []
+                    |> Encode.object
+              )
+            ]
+            |> Encode.encode 0
+            |> send
+        , if isFinished then
+            finished ()
+          else
+            Cmd.none
         ]
-        |> Encode.encode 0
-        |> send
 
 
 sendBegin : Model -> Cmd msg
